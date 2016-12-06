@@ -4,7 +4,7 @@ function(pop, zero = TRUE, blur = 0.0, sea = NA)
       # Force this to be a matrix (at least for now. A data frame is not contiguous)
    pop = as.matrix(pop)
 
-   if(!is.na(sea)) 
+   if(!is.na(sea))
          # Add some padding with the constant value of the mean of the original matrix.
       pop = addBoundary(pop, sea)
 
@@ -16,14 +16,14 @@ if(TRUE)  {
    x = expand.grid(1:(ncol(pop) + zero), 1:(nrow(pop) + zero))
    y = x[,2]
    x = x[,1]
-} else     
+} else
       # Currently ignored.
       # We were letting the caller pass their own grid.
    if(missing(y) && (is.matrix(x) || is.data.frame(x))) {
 	y = x[, 2]
         x = x[, 1]
    }
-   
+
   if(is.matrix(pop)) {
          # Could do lapply(seq(length = ncol(pop)), function(i) as.numeric(pop[, i])), but no need.
       popEls = pop
@@ -35,10 +35,11 @@ if(TRUE)  {
   }
 
      # Zero based counting for C.
-   x = as.numeric(x) - 1 
+   x = as.numeric(x) - 1
    y = as.numeric(y) - 1
 
    tmp = .Call("R_makecartogram", popEls, x, y, dim, as.numeric(blur), PACKAGE = "Rcartogram")
+
    ans = lapply(tmp, function(x) matrix(x, nrow(pop) + zero, ncol(pop) + zero, byrow = TRUE))
    ans = structure(ans,
 	           names  = c("x", "y"),
@@ -70,7 +71,7 @@ function(x, ...)
 transform.Cartogram =
 function(`_data`, x, y = NULL, ...)
 {
-  predict(`_data`, x, y, ...) 
+  predict(`_data`, x, y, ...)
 }
 
 predict.Cartogram =
@@ -84,10 +85,10 @@ function(object, x, y = NULL, ...)
   if(length(x) != length(y)) {
     len = max(length(x), length(y))
     length(x) = len
-    length(y) = len    
+    length(y) = len
   }
-     
-  
+
+
   # Avoid problems with the same vector (tmp) being sent to C twice due to R's
   # copy-on-modify rules
   tmp_x = rep(as.numeric(NA), length(x))
@@ -103,7 +104,7 @@ predict.Cartogram =
  #
  #  Essentials taken from Mark Newman's interp.c code.
  #
- #   This is a simple, inefficient version at present. 
+ #   This is a simple, inefficient version at present.
  #
 function(object, x, y = NULL, ...)
 {
@@ -111,16 +112,16 @@ function(object, x, y = NULL, ...)
     y = x[, 2]
     x = x[, 1]
   }
-   
+
   ix = as.integer(x)
   iy = as.integer(y)
   dx = x - ix
   dy = y - iy
 
-  # This could be done much more efficiently with some vectorized operations. 
+  # This could be done much more efficiently with some vectorized operations.
   # and if we really care, it can be done very easily in C.
 
-  sapply(object,  
+  sapply(object,
           function(m) {
             sapply(seq(along = ix),
                     function(i)
@@ -128,7 +129,7 @@ function(object, x, y = NULL, ...)
             })
 }
 
-pred = 
+pred =
 function(m, ix, iy, dx, dy, i = 1) {
    # + need to go at the end of the line or the R parser
    # thinks these are separate expressions with the last 3 preceded by a +
@@ -136,8 +137,8 @@ function(m, ix, iy, dx, dy, i = 1) {
    #        +2
    # which gives expression{ 1, 2}
  (1-dx[i])*(1-dy[i]) * m[, ix[i]][ iy[i] ] +
-       dx[i] * (1-dy[i]) * m[, ix[i] + 1L][iy[i]]  + 
-         (1-dx[i]) * dy[i]* m[, ix[i]][iy[i] + 1L]  + 
+       dx[i] * (1-dy[i]) * m[, ix[i] + 1L][iy[i]]  +
+         (1-dx[i]) * dy[i]* m[, ix[i]][iy[i] + 1L]  +
            dx[i] * dy[i]* m[, ix[i] + 1L][iy[i] + 1L]
 }
 
@@ -172,10 +173,10 @@ function(pop, sea = 2, land.mean = mean(unlist(pop)))
 {
       extra = as.integer( sea * dim(pop))
 
-      pop = as.matrix(pop)  
+      pop = as.matrix(pop)
       pad.top = matrix(land.mean, extra[1], ncol(pop) + 2*extra[2])
       pad.left = matrix(land.mean, nrow(pop), extra[2])
-      structure(rbind(pad.top, 
+      structure(rbind(pad.top,
                       cbind(pad.left, pop, pad.left),
                       pad.top),
                 class = "ExpandedMatrix",
